@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/holo_blue_bright">
+
+    <Spinner
+        android:layout_width="90dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/mainTopSpinner"
+        android:spinnerMode="dropdown"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="false"
+        android:layout_alignBottom="@+id/mainTopButton_search" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/mainTopText_search"
+        android:layout_gravity="bottom"
+        android:layout_toRightOf="@+id/mainTopSpinner"
+        android:layout_alignParentBottom="false"
+        android:layout_alignBottom="@+id/mainTopButton_search"
+        android:layout_toLeftOf="@+id/mainTopButton_search"
+        android:layout_alignParentTop="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mainTopButton_search"
+        android:layout_alignParentEnd="true"
+        android:background="@mipmap/pic_icon_4"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:elegantTextHeight="true" />
+
+</RelativeLayout>

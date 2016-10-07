@@ -4,9 +4,14 @@ android {
     compileSdkVersion 24
     buildToolsVersion "24.0.3"
 
+    aaptOptions {
+        cruncherEnabled = false
+        useNewCruncher = false
+    }
+
     defaultConfig {
         applicationId "xuyihao.rongyiclient"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"

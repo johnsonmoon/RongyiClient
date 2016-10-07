@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/holo_blue_bright">
+
+    <LinearLayout style="@style/linaer_bottom" >
+
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageButton_Bottom_Home"
+            style="@style/rbt_bottom"
+            android:background="@mipmap/bottom_button_image_1"
+            android:layout_gravity="center_horizontal"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/linaer_bottom" >
+
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageButton_Bottom_Product"
+            style="@style/rbt_bottom"
+            android:background="@mipmap/bottom_button_image_2"
+            android:layout_gravity="center_horizontal"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/linaer_bottom" >
+
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageButton_Bottom_Community"
+            style="@style/rbt_bottom"
+            android:background="@mipmap/bottom_button_image_3"
+            android:layout_gravity="center_horizontal"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/linaer_bottom" >
+
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageButton_Bottom_Mine"
+            style="@style/rbt_bottom"
+            android:background="@mipmap/bottom_button_image_4"
+            android:layout_gravity="center_horizontal"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+</LinearLayout>
