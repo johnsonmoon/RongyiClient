@@ -47,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 final String Acc_name = editTextAcc_name.getText().toString().trim();
-                final String Acc_pwd = editTextAcc_pwd.getTransitionName().toString().trim();
+                final String Acc_pwd = editTextAcc_pwd.getText().toString().trim();
                 if(Acc_name == null || Acc_name.equals("")){
                     Toast.makeText(LoginActivity.this, "用户名不能为空!", Toast.LENGTH_LONG);
                     return;
@@ -123,7 +123,7 @@ public class LoginActivity extends AppCompatActivity {
                                     return "登录失败!";
                                 }
                             } catch (JSONException e) {
-                                return e.getMessage();
+                                return "登录失败!";
                             }
                         }
                     }.execute();
