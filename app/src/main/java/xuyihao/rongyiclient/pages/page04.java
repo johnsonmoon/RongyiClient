@@ -22,7 +22,6 @@ import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
 import xuyihao.rongyiclient.MainActivity;
 import xuyihao.rongyiclient.R;
 import xuyihao.rongyiclient.activities.LoginActivity;
-import xuyihao.rongyiclient.entity.Accounts;
 import xuyihao.rongyiclient.tool.utils.FileUtils;
 
 /**
@@ -58,10 +57,6 @@ public class page04 {
      */
     private SQLiteDatabase database = MainActivity.database;
     /**
-     * 当前用户
-     */
-    private Accounts accounts = MainActivity.accounts;
-    /**
      * 网络工具
      */
     private RequestSender sender = MainActivity.sender;
@@ -83,9 +78,6 @@ public class page04 {
     public page04(Activity ac, View view){
         context = ac;
         page04 = view;
-        if(!MainActivity.isLogin){
-            Toast.makeText(ac, "未登录,请点击头像登录", Toast.LENGTH_LONG);
-        }
         init();
         initEvent();
     }
@@ -98,63 +90,45 @@ public class page04 {
     public void initAccountsPhoto(){
         FileUtils.checkAndCreateFilePath(accountPhotoPath);
         if(MainActivity.isLogin){
-            this.textViewAccName.setText(accounts.getAcc_name());
-            accountHeadPhotoName = accounts.getAcc_ID() + "headPhoto.jpeg";
-            accountHeadPhotoThumbnailName = accounts.getAcc_ID() + "headPhotoThumbnail.jpeg";
+            this.textViewAccName.setText(MainActivity.accounts.getAcc_name());
+            accountHeadPhotoName = MainActivity.accounts.getAcc_ID() + "headPhoto.jpeg";
+            accountHeadPhotoThumbnailName = MainActivity.accounts.getAcc_ID() + "headPhotoThumbnail.jpeg";
             File photo = new File(accountPhotoPath + File.separator + accountHeadPhotoName);
             File thumbnail = new File(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName);
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String json = sender.executeGet(MainActivity.accountsActionURL + "?action=getHeadPhotoId&Acc_ID=" + accounts.getAcc_ID());
-                    try {
-                        JSONObject jsonObject = new JSONObject(json);
-                        photoId = jsonObject.getString("headPhotoId");
-                    }catch (JSONException e){
-                        photoId = "";
-                    }
-                }
-            }).start();
-            if(photo.exists()){
+            if(photo.exists() && thumbnail.exists()){
                 headPhoto = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoName);
-            }else{//下载图片
-                new AsyncTask(){
-                    @Override
-                    protected void onPostExecute(Object o) {
-                        super.onPostExecute(o);
-                    }
-
-                    @Override
-                    protected Object doInBackground(Object[] params) {
-                        boolean flag = downloader.downloadByGetSaveToPath(accountPhotoPath + File.separator + accountHeadPhotoName, MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + photoId);
-                        headPhoto = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoName);
-                        return flag;
-                    }
-                }.execute();
-            }
-            if(thumbnail.exists()){
                 headPhotoThumbnail = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName);
                 this.btnHeadPhoto.setImageBitmap(headPhotoThumbnail);
-            }else{
+            }else{//图片不在本地，下载图片
                 new AsyncTask(){
                     @Override
                     protected void onPostExecute(Object o) {
                         super.onPostExecute(o);
-                        if(Boolean.parseBoolean(o.toString())){
-                            btnHeadPhoto.setImageBitmap(headPhotoThumbnail);
+                        if(!Boolean.parseBoolean(o.toString())){
+                            Toast.makeText(context, "头像图片下载失败!", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     protected Object doInBackground(Object[] params) {
-                        boolean flag = downloader.downloadByGetSaveToPath(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName, MainActivity.accountsActionURL + "?action=getThumbnailPhotoById&Photo_ID=" + photoId);
+                        String json = sender.executeGet(MainActivity.accountsActionURL + "?action=getHeadPhotoId&Acc_ID=" + MainActivity.accounts.getAcc_ID());
+                        try {
+                            JSONObject jsonObject = new JSONObject(json);
+                            photoId = jsonObject.getString("headPhotoId");
+                        } catch (JSONException e) {
+                            photoId = "";
+                            return false;
+                        }
+                        boolean flag = downloader.downloadByGet(accountPhotoPath + File.separator + accountHeadPhotoName, MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + photoId);
+                        flag = flag && downloader.downloadByGet(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName, MainActivity.accountsActionURL + "?action=getThumbnailPhotoById&Photo_ID=" + photoId);
+                        headPhoto = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoName);
                         headPhotoThumbnail = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName);
                         return flag;
                     }
                 }.execute();
             }
         }
+
     }
 
     /**

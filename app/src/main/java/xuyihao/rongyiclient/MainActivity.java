@@ -27,6 +27,7 @@ import xuyihao.rongyiclient.tool.DatabaseOperator;
 import xuyihao.rongyiclient.widget.*;
 import xuyihao.rongyiclient.pages.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class MainActivity extends Activity{
     /**
      * 本地文件存放路径
      */
-    public static String BASE_FILE_PATH = Environment.getExternalStorageDirectory().getPath();
+    public static String BASE_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + File.separator + "rogyi";
 
     /**
      * 网络请求相关
@@ -59,19 +60,19 @@ public class MainActivity extends Activity{
     /**
      * 账户相关URL
      */
-    public static final String accountsActionURL = "115.28.192.61:8088/rongyi/accounts";
+    public static final String accountsActionURL = "http://115.28.192.61:8088/rongyi/accounts";
     /**
      * 视频相关URL
      */
-    public static final String coursesActionURL = "115.28.192.61:8088/rongyi/courses";
+    public static final String coursesActionURL = "http://115.28.192.61:8088/rongyi/courses";
     /**
      * 帖子相关URL
      */
-    public static final String postsActionURL = "115.28.192.61:8088/rongyi/posts";
+    public static final String postsActionURL = "http://115.28.192.61:8088/rongyi/posts";
     /**
      * 店铺相关URL
      */
-    public static final String shopsActionURL = "115.28.192.61:8088/rongyi/shops";
+    public static final String shopsActionURL = "http://115.28.192.61:8088/rongyi/shops";
 
     private MyNoScrollViewPager mViewPager;//viewPager用来切换界面
     private PagerAdapter mPagerAdapter;//view适配器
@@ -147,15 +148,15 @@ public class MainActivity extends Activity{
                         JSONObject json = new JSONObject(o.toString());
                         String result = json.getString("result");
                         if (result.equals("true")) {
-                            Toast.makeText(MainActivity.this, "登录成功", Toast.LENGTH_LONG);
+                            Toast.makeText(MainActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
                             MainActivity.isLogin = true;
                             page4.initAccountsPhoto();
                         } else {
-                            Toast.makeText(MainActivity.this, "登录失败", Toast.LENGTH_LONG);
+                            Toast.makeText(MainActivity.this, "登录失败", Toast.LENGTH_SHORT).show();
                             MainActivity.isLogin = false;
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
 

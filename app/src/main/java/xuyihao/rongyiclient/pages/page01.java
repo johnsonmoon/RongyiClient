@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
 import xuyihao.rongyiclient.MainActivity;
-import xuyihao.rongyiclient.entity.Accounts;
 import xuyihao.rongyiclient.widget.*;
 import xuyihao.rongyiclient.R;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import java.util.List;
  */
 public class page01{
 
-    private Accounts accounts = MainActivity.accounts;
     private SQLiteDatabase database = MainActivity.database;
     private RequestSender sender = MainActivity.sender;
 

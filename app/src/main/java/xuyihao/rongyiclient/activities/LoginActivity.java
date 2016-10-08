@@ -49,11 +49,11 @@ public class LoginActivity extends AppCompatActivity {
                 final String Acc_name = editTextAcc_name.getText().toString().trim();
                 final String Acc_pwd = editTextAcc_pwd.getText().toString().trim();
                 if(Acc_name == null || Acc_name.equals("")){
-                    Toast.makeText(LoginActivity.this, "用户名不能为空!", Toast.LENGTH_LONG);
+                    Toast.makeText(LoginActivity.this, "用户名不能为空!", Toast.LENGTH_SHORT).show();
                     return;
 
                 }else if(Acc_pwd == null || Acc_pwd.equals("")){
-                    Toast.makeText(LoginActivity.this, "密码不能为空!", Toast.LENGTH_LONG);
+                    Toast.makeText(LoginActivity.this, "密码不能为空!", Toast.LENGTH_SHORT).show();
                     return;
                 }else{
                     new AsyncTask() {
@@ -66,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         protected void onPostExecute(Object o) {
                             super.onPostExecute(o);
-                            Toast.makeText(LoginActivity.this, o.toString(), Toast.LENGTH_LONG);
+                            Toast.makeText(LoginActivity.this, o.toString(), Toast.LENGTH_SHORT).show();
                             if (o.toString().contains("登录成功")) {//登录成功关闭登录界面
                                 Intent intent = getIntent();
                                 Bundle bundle = new Bundle();
