@@ -13,12 +13,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
 import xuyihao.rongyiclient.activities.MainActivity;
 import xuyihao.rongyiclient.R;
+import xuyihao.rongyiclient.activities.common.ImageDisplayActivity;
 import xuyihao.rongyiclient.entity.Accounts;
 
 /**
@@ -165,14 +171,63 @@ public class AccountInfoActivity extends AppCompatActivity {
         btnHeadPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(isMyself) {//如果是本用户
+                    Intent intent = new Intent(AccountInfoActivity.this, ImageDisplayActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("MODE", ImageDisplayActivity.IMAGE_DISPLAY_MODE_LOCALFILE);
+                    ArrayList<String> imageFilePathNameList = new ArrayList<String>();
+                    imageFilePathNameList.add(accountHeadPhotoPathName);
+                    bundle.putStringArrayList("imageFilePathNameList", imageFilePathNameList);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                }else{//其他账户
 
+                }
             }
         });
 
         btnPhotoCombine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                new AsyncTask(){
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        Toast.makeText(AccountInfoActivity.this, "处理中...", Toast.LENGTH_LONG).show();
+                    }
 
+                    @Override
+                    protected void onPostExecute(Object o) {
+                        super.onPostExecute(o);
+                        if(o != null){
+                            ArrayList<String> urlList = (ArrayList<String>)o;
+                            Intent intent = new Intent(AccountInfoActivity.this, ImageDisplayActivity.class);
+                            Bundle bundle = new Bundle();
+                            bundle.putInt("MODE", ImageDisplayActivity.IMAGE_DISPLAY_MODE_DOWNLOAD);
+                            bundle.putStringArrayList("imageURLList", urlList);
+                            intent.putExtras(bundle);
+                            startActivity(intent);
+                        }
+                    }
+
+                    @Override
+                    protected Object doInBackground(Object[] params) {
+                        String json = sender.executeGet(MainActivity.accountsActionURL + "?action=getPhotosId&Acc_ID=" + Acc_ID);
+                        ArrayList<String> urlList = new ArrayList<String>();
+                        try{
+                            JSONObject jsonObject = new JSONObject(json);
+                            JSONArray array = jsonObject.getJSONArray("combinePhotoId");
+                            int length = array.length();
+                            for(int i = 0; i < length; i++){
+                                String id = array.get(i).toString();
+                                urlList.add(MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + id);
+                            }
+                        }catch (JSONException e){
+                            return null;
+                        }
+                        return urlList;
+                    }
+                }.execute();
             }
         });
 
