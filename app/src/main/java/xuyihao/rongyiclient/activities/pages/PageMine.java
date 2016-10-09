@@ -1,11 +1,13 @@
-package xuyihao.rongyiclient.pages;
+package xuyihao.rongyiclient.activities.pages;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -19,20 +21,22 @@ import java.io.File;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.Downloader;
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
-import xuyihao.rongyiclient.MainActivity;
+import xuyihao.rongyiclient.activities.MainActivity;
 import xuyihao.rongyiclient.R;
-import xuyihao.rongyiclient.activities.LoginActivity;
-import xuyihao.rongyiclient.tool.utils.FileUtils;
+import xuyihao.rongyiclient.activities.accounts.AccountInfoActivity;
+import xuyihao.rongyiclient.activities.accounts.LoginActivity;
+import xuyihao.rongyiclient.entity.Accounts;
+import xuyihao.rongyiclient.tools.utils.FileUtils;
 
 /**
  * Created by xuyihao on 16-4-4.
  */
-public class page04 {
+public class PageMine {
 
     /**
      * 控件
      */
-    private View page04;
+    private View viewPageMine;
     private Activity context;
     private Button btnEnvelope;
     private ImageView btnHeadPhoto;
@@ -53,10 +57,6 @@ public class page04 {
     private TextView textViewAccName;
 
     /**
-     * 本地数据库
-     */
-    private SQLiteDatabase database = MainActivity.database;
-    /**
      * 网络工具
      */
     private RequestSender sender = MainActivity.sender;
@@ -65,25 +65,24 @@ public class page04 {
      * 账户文件路径
      */
     private String accountPhotoPath = MainActivity.BASE_FILE_PATH + File.separator + "accounts";
-    private String accountHeadPhotoName;
-    private String accountHeadPhotoThumbnailName;
+    private String accountHeadPhotoPathName = accountPhotoPath + File.separator +"accountHeadPhoto.jpeg";
+    private String accountHeadPhotoThumbnailPathName = accountPhotoPath + File.separator + "accountHeadPhotoThumbnail.jpeg";
     /**
-     * 账户图片的bitmap
+     * 账户图片的bitmap(缩略图)
      */
-    private Bitmap headPhoto = null;
-    private Bitmap headPhotoThumbnail = null;
+    private Bitmap bitMapHeadPhotoThumbnail = null;
 
     String photoId = "";
 
-    public page04(Activity ac, View view){
+    public PageMine(Activity ac, View view){
         context = ac;
-        page04 = view;
+        viewPageMine = view;
         init();
         initEvent();
     }
 
     /**
-     * 初始化用户图片
+     * 初始化用户头像(登陆成功)
      *
      * 供activity调用
      */
@@ -91,14 +90,11 @@ public class page04 {
         FileUtils.checkAndCreateFilePath(accountPhotoPath);
         if(MainActivity.isLogin){
             this.textViewAccName.setText(MainActivity.accounts.getAcc_name());
-            accountHeadPhotoName = MainActivity.accounts.getAcc_ID() + "headPhoto.jpeg";
-            accountHeadPhotoThumbnailName = MainActivity.accounts.getAcc_ID() + "headPhotoThumbnail.jpeg";
-            File photo = new File(accountPhotoPath + File.separator + accountHeadPhotoName);
-            File thumbnail = new File(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName);
+            File photo = new File(accountHeadPhotoPathName);
+            File thumbnail = new File(accountHeadPhotoThumbnailPathName);
             if(photo.exists() && thumbnail.exists()){
-                headPhoto = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoName);
-                headPhotoThumbnail = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName);
-                this.btnHeadPhoto.setImageBitmap(headPhotoThumbnail);
+                bitMapHeadPhotoThumbnail = BitmapFactory.decodeFile(accountHeadPhotoThumbnailPathName);
+                this.btnHeadPhoto.setImageBitmap(bitMapHeadPhotoThumbnail);
             }else{//图片不在本地，下载图片
                 new AsyncTask(){
                     @Override
@@ -106,6 +102,10 @@ public class page04 {
                         super.onPostExecute(o);
                         if(!Boolean.parseBoolean(o.toString())){
                             Toast.makeText(context, "头像图片下载失败!", Toast.LENGTH_SHORT).show();
+                        }else {
+                            if(bitMapHeadPhotoThumbnail != null) {
+                                btnHeadPhoto.setImageBitmap(bitMapHeadPhotoThumbnail);
+                            }
                         }
                     }
 
@@ -119,10 +119,9 @@ public class page04 {
                             photoId = "";
                             return false;
                         }
-                        boolean flag = downloader.downloadByGet(accountPhotoPath + File.separator + accountHeadPhotoName, MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + photoId);
-                        flag = flag && downloader.downloadByGet(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName, MainActivity.accountsActionURL + "?action=getThumbnailPhotoById&Photo_ID=" + photoId);
-                        headPhoto = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoName);
-                        headPhotoThumbnail = BitmapFactory.decodeFile(accountPhotoPath + File.separator + accountHeadPhotoThumbnailName);
+                        boolean flag = downloader.downloadByGet(accountHeadPhotoPathName, MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + photoId);
+                        flag = flag && downloader.downloadByGet(accountHeadPhotoThumbnailPathName, MainActivity.accountsActionURL + "?action=getThumbnailPhotoById&Photo_ID=" + photoId);
+                        bitMapHeadPhotoThumbnail = BitmapFactory.decodeFile(accountHeadPhotoThumbnailPathName);
                         return flag;
                     }
                 }.execute();
@@ -132,26 +131,41 @@ public class page04 {
     }
 
     /**
+     * 修改用户头像图片等(注销成功)
+     *
+     * 供activity调用
+     */
+    public void invalidateAccountsPhoto(){
+        File photo = new File(accountHeadPhotoPathName);
+        File thumbnail = new File(accountHeadPhotoThumbnailPathName);
+        if (photo.exists() || thumbnail.exists()) {
+            photo.delete();
+            thumbnail.delete();
+        }
+        this.btnHeadPhoto.setImageResource(R.mipmap.page04_default_head_photo);
+    }
+
+    /**
     *  初始化控件
     * */
     private void init(){
-        btnEnvelope = (Button)page04.findViewById(R.id.page04_button_envelope);
-        btnHeadPhoto = (ImageView)page04.findViewById(R.id.page04_imageButton_headPhoto);
-        btnSetting = (Button)page04.findViewById(R.id.page04_button_setting);
-        btnMyOrder = (ImageView)page04.findViewById(R.id.page04_imageView_myOrder);
-        btnWaitPay = (ImageView)page04.findViewById(R.id.page04_imageView_waitPay);
-        btnWaitSend = (ImageView)page04.findViewById(R.id.page04_imageView_waitSend);
-        btnWaitReceive = (ImageView)page04.findViewById(R.id.page04_imageView_waitReceive);
-        btnWaitComment = (ImageView)page04.findViewById(R.id.page04_imageView_waitComment);
-        btnAddressManage = (ImageView)page04.findViewById(R.id.page04_imageView_AddressManage);
-        btnMyYouHui = (ImageView)page04.findViewById(R.id.page04_imageView_myYouHui);
-        btnMyRongYiBi = (ImageView)page04.findViewById(R.id.page04_imageView_myRongYiBi);
-        btnMyCart = (ImageView)page04.findViewById(R.id.page04_imageView_myCart);
-        btnOpenShop = (ImageView)page04.findViewById(R.id.page04_imageView_openShop);
-        btnMyPublished = (ImageView)page04.findViewById(R.id.page04_imageView_myPublished);
-        btnMyFootPrint = (ImageView)page04.findViewById(R.id.page04_imageView_myFootPrint);
-        btnFavourite = (ImageView)page04.findViewById(R.id.page04_imageView_myFavourite);
-        textViewAccName = (TextView)page04.findViewById(R.id.page04_textView_Acc_name);
+        btnEnvelope = (Button) viewPageMine.findViewById(R.id.page04_button_envelope);
+        btnHeadPhoto = (ImageView) viewPageMine.findViewById(R.id.page04_imageButton_headPhoto);
+        btnSetting = (Button) viewPageMine.findViewById(R.id.page04_button_setting);
+        btnMyOrder = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myOrder);
+        btnWaitPay = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_waitPay);
+        btnWaitSend = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_waitSend);
+        btnWaitReceive = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_waitReceive);
+        btnWaitComment = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_waitComment);
+        btnAddressManage = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_AddressManage);
+        btnMyYouHui = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myYouHui);
+        btnMyRongYiBi = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myRongYiBi);
+        btnMyCart = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myCart);
+        btnOpenShop = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_openShop);
+        btnMyPublished = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myPublished);
+        btnMyFootPrint = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myFootPrint);
+        btnFavourite = (ImageView) viewPageMine.findViewById(R.id.page04_imageView_myFavourite);
+        textViewAccName = (TextView) viewPageMine.findViewById(R.id.page04_textView_Acc_name);
     }
 
     /**
@@ -169,7 +183,14 @@ public class page04 {
             @Override
             public void onClick(View v) {
                 if(MainActivity.isLogin){//已经登录
-
+                    Intent intent = new Intent(context, AccountInfoActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean("isMyself", true);
+                    bundle.putString("Acc_ID", MainActivity.accounts.getAcc_ID());
+                    bundle.putString("accountHeadPhotoPathName", accountHeadPhotoPathName);
+                    bundle.putString("accountHeadPhotoThumbnailPathName", accountHeadPhotoThumbnailPathName);
+                    intent.putExtras(bundle);
+                    context.startActivityForResult(intent, 0x02);
                 }else{
                     Intent intent = new Intent(context, LoginActivity.class);
                     context.startActivityForResult(intent, 0x01);

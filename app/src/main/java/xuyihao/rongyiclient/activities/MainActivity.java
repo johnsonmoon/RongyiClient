@@ -1,4 +1,4 @@
-package xuyihao.rongyiclient;
+package xuyihao.rongyiclient.activities;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -22,10 +22,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
+import xuyihao.rongyiclient.R;
+import xuyihao.rongyiclient.activities.pages.PageHome;
+import xuyihao.rongyiclient.activities.pages.PageMine;
 import xuyihao.rongyiclient.entity.Accounts;
-import xuyihao.rongyiclient.tool.DatabaseOperator;
+import xuyihao.rongyiclient.tools.DatabaseOperator;
+import xuyihao.rongyiclient.tools.utils.FileUtils;
 import xuyihao.rongyiclient.widget.*;
-import xuyihao.rongyiclient.pages.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,19 +40,21 @@ public class MainActivity extends Activity{
      * 当前用户
      */
     public static Accounts accounts;
-    /**
-     * 本地缓存数据库及操作
-     */
     private DatabaseOperator operator;
-    public static SQLiteDatabase database;
-
     /**
-     * 本地文件存放路径
+     * 本地缓存数据库
+     */
+    public static SQLiteDatabase database;
+    /**
+     * 本地文件非临时存放路径
      */
     public static String BASE_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + File.separator + "rogyi";
-
     /**
-     * 网络请求相关
+     * 本地临时文件存放路径
+     */
+    public static String BASE_TEMP_FILE_PATH = BASE_FILE_PATH + File.separator + "temp";
+    /**
+     * 全局网络请求相关工具(保存了cookie信息)
      */
     public static RequestSender sender = new RequestSender();
     /**
@@ -81,8 +86,8 @@ public class MainActivity extends Activity{
     /**
      * 页面类
      */
-    private page01 page1;
-    private page04 page4;
+    private PageHome pageHome;
+    private PageMine pageMine;
 
     /**
      * 主页底部按钮
@@ -105,6 +110,8 @@ public class MainActivity extends Activity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FileUtils.checkAndCreateFilePath(BASE_FILE_PATH);
+        FileUtils.checkAndCreateFilePath(BASE_TEMP_FILE_PATH);
         Init();
         initSpinner();
         InitViewPage();
@@ -150,7 +157,7 @@ public class MainActivity extends Activity{
                         if (result.equals("true")) {
                             Toast.makeText(MainActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
                             MainActivity.isLogin = true;
-                            page4.initAccountsPhoto();
+                            pageMine.initAccountsPhoto();
                         } else {
                             Toast.makeText(MainActivity.this, "登录失败", Toast.LENGTH_SHORT).show();
                             MainActivity.isLogin = false;
@@ -235,9 +242,9 @@ public class MainActivity extends Activity{
         mViewPager.setAdapter(mPagerAdapter);
         mViewPager.setNoScroll(true);//设置viewPage不能左右滑动
         //初始化第一个页面类
-        this.page1 = new page01(this, tab1);//注意传参
+        this.pageHome = new PageHome(this, tab1);//注意传参
         //初始化第4个页面类
-        this.page4 = new page04(this, tab4);
+        this.pageMine = new PageMine(this, tab4);
     }
 
     /**
@@ -319,7 +326,13 @@ public class MainActivity extends Activity{
         if((requestCode == 0x01) && (resultCode == 0x01)){//登录界面返回
             Bundle bundle = data.getExtras();
             if(bundle.getBoolean("result")){//如果登录成功
-                page4.initAccountsPhoto();
+                pageMine.initAccountsPhoto();
+            }
+        }
+        if((requestCode == 0x02) && (resultCode == 0x02)){//由AccountInfo注销账户返回
+            Bundle bundle = data.getExtras();
+            if(bundle.getBoolean("result")){//如果注销成功
+                pageMine.invalidateAccountsPhoto();
             }
         }
     }

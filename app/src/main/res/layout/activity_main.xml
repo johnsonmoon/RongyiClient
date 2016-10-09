@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="xuyihao.rongyiclient.MainActivity">
+    tools:context="xuyihao.rongyiclient.activities.MainActivity">
 
     <include layout="@layout/main_top_layout"/>
 

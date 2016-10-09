@@ -8,7 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="xuyihao.rongyiclient.activities.LoginActivity">
+    tools:context="xuyihao.rongyiclient.activities.accounts.LoginActivity">
 
     <LinearLayout
         android:orientation="vertical"
@@ -59,6 +59,13 @@
             android:layout_height="wrap_content"
             android:id="@+id/loginActivity_button_login"
             tools:ignore="HardcodedText" />
+
+        <Button
+            android:text="还没有账号?点击注册"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/loginActivity_button_register"
+            android:textSize="12sp" />
 
     </LinearLayout>
 </RelativeLayout>

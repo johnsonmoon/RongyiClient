@@ -1,4 +1,4 @@
-package xuyihao.rongyiclient.pages;
+package xuyihao.rongyiclient.activities.pages;
 
 import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,7 +16,7 @@ import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
-import xuyihao.rongyiclient.MainActivity;
+import xuyihao.rongyiclient.activities.MainActivity;
 import xuyihao.rongyiclient.widget.*;
 import xuyihao.rongyiclient.R;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Created by xuyihao on 2016/3/5.
  */
-public class page01{
+public class PageHome {
 
     private SQLiteDatabase database = MainActivity.database;
     private RequestSender sender = MainActivity.sender;
@@ -79,12 +79,11 @@ public class page01{
     /**
      * 构造器，一参为上文，二参为上文的布局view
      * */
-    public page01(Activity ac, View view){
+    public PageHome(Activity ac, View view){
         context = ac;
         page01 = view;
         LayoutInflater in = LayoutInflater.from(context);
         page01_2part = in.inflate(R.layout.page01_2part_layout, null);
-        this.database = database;
         init();
         initPoint();
         initImageCycle();
@@ -92,8 +91,8 @@ public class page01{
         initListView();
     }
 
-    /*
-    *设置初始化条件，绑定控件
+    /**
+    * 设置初始化条件，绑定控件
     * */
     private void init(){
         mImageCycleViewPager = (MyNoScrollViewPager)page01_2part.findViewById(R.id.page01_imageCycleViewPager);
@@ -107,7 +106,7 @@ public class page01{
     }
 
 
-    /*
+    /**
     * 初始化listView
     * */
     private void initListView(){
@@ -131,47 +130,47 @@ public class page01{
         mListview.setAdapter(mSimpleAdapter);
     }
 
-    /*
+    /**
     * 设置按钮监听
     * */
     public void initButtonEvent(){
         btnTeach.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(page01.this.context, "hah", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PageHome.this.context, "hah", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnNear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(page01.this.context, "hahaha", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PageHome.this.context, "hahaha", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnHot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(page01.this.context, "hani", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PageHome.this.context, "hani", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnGood.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(page01.this.context, "hamolk", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PageHome.this.context, "hamolk", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnFocus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(page01.this.context, "lagh", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PageHome.this.context, "lagh", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    /*
+    /**
     * 初始化循环图片列表
     * */
     private void initImageCycle(){
@@ -188,7 +187,7 @@ public class page01{
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(page01.this.context, "yeah!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PageHome.this.context, "yeah!", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -240,7 +239,7 @@ public class page01{
         thread.start();//开始线程
     }
 
-    /*
+    /**
     * 初始化小点
     * */
     private void initPoint(){

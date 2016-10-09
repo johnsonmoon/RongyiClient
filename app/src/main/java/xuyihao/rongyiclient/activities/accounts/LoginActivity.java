@@ -1,4 +1,4 @@
-package xuyihao.rongyiclient.activities;
+package xuyihao.rongyiclient.activities.accounts;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -17,7 +17,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
-import xuyihao.rongyiclient.MainActivity;
+import xuyihao.rongyiclient.activities.MainActivity;
 import xuyihao.rongyiclient.R;
 import xuyihao.rongyiclient.entity.Accounts;
 
@@ -34,6 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText editTextAcc_pwd;
     private Button btnLogin;
     private TextView textViewProgress;
+    private Button btnRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class LoginActivity extends AppCompatActivity {
         this.editTextAcc_pwd = (EditText)findViewById(R.id.loginActivity_editText_Acc_pwd);
         this.btnLogin = (Button)findViewById(R.id.loginActivity_button_login);
         this.textViewProgress = (TextView)findViewById(R.id.loginActivity_textView_progress);
+        this.btnRegister = (Button)findViewById(R.id.loginActivity_button_register);
         this.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -71,6 +73,7 @@ public class LoginActivity extends AppCompatActivity {
                                 Intent intent = getIntent();
                                 Bundle bundle = new Bundle();
                                 bundle.putBoolean("result", true);
+                                intent.putExtras(bundle);
                                 setResult(0x01, intent);
                                 LoginActivity.this.finish();
                             }
@@ -130,5 +133,16 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
+        this.btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

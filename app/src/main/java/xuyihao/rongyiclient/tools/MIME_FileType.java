@@ -1,4 +1,4 @@
-package xuyihao.rongyiclient.tool;
+package xuyihao.rongyiclient.tools;
 
 /**
  * created by xuyihao on 2016/5/15

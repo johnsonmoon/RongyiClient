@@ -1,4 +1,4 @@
-package xuyihao.rongyiclient.tool.utils;
+package xuyihao.rongyiclient.tools.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import xuyihao.rongyiclient.tool.MIME_FileType;
+import xuyihao.rongyiclient.tools.MIME_FileType;
 
 /**
  * 文件操作类
