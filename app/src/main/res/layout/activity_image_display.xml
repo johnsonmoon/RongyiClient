@@ -22,13 +22,6 @@
                 android:textSize="18sp"
                 android:textAlignment="center" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageDispalyActivity_textView_displayName"
-                android:textSize="18sp"
-                android:textAlignment="center" />
-
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">

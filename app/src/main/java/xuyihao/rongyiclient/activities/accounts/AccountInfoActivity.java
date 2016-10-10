@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.StringTokenizer;
 
 import xuyihao.JohnsonHttpConnector.connectors.http.RequestSender;
 import xuyihao.rongyiclient.activities.MainActivity;
@@ -176,8 +177,11 @@ public class AccountInfoActivity extends AppCompatActivity {
                     Bundle bundle = new Bundle();
                     bundle.putInt("MODE", ImageDisplayActivity.IMAGE_DISPLAY_MODE_LOCALFILE);
                     ArrayList<String> imageFilePathNameList = new ArrayList<String>();
+                    ArrayList<String> thumbnailFilePathNameList = new ArrayList<String>();
                     imageFilePathNameList.add(accountHeadPhotoPathName);
+                    thumbnailFilePathNameList.add(accountHeadPhotoThumbnailPathName);
                     bundle.putStringArrayList("imageFilePathNameList", imageFilePathNameList);
+                    bundle.putStringArrayList("thumbnailFilePathNameList", thumbnailFilePathNameList);
                     intent.putExtras(bundle);
                     startActivity(intent);
                 }else{//其他账户
@@ -190,6 +194,9 @@ public class AccountInfoActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 new AsyncTask(){
+                    private ArrayList<String> thumbnailURLList = new ArrayList<String>();
+                    private ArrayList<String> imageURLList = new ArrayList<String>();
+
                     @Override
                     protected void onPreExecute() {
                         super.onPreExecute();
@@ -199,33 +206,31 @@ public class AccountInfoActivity extends AppCompatActivity {
                     @Override
                     protected void onPostExecute(Object o) {
                         super.onPostExecute(o);
-                        if(o != null){
-                            ArrayList<String> urlList = (ArrayList<String>)o;
-                            Intent intent = new Intent(AccountInfoActivity.this, ImageDisplayActivity.class);
-                            Bundle bundle = new Bundle();
-                            bundle.putInt("MODE", ImageDisplayActivity.IMAGE_DISPLAY_MODE_DOWNLOAD);
-                            bundle.putStringArrayList("imageURLList", urlList);
-                            intent.putExtras(bundle);
-                            startActivity(intent);
-                        }
+                        Intent intent = new Intent(AccountInfoActivity.this, ImageDisplayActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putInt("MODE", ImageDisplayActivity.IMAGE_DISPLAY_MODE_DOWNLOAD);
+                        bundle.putStringArrayList("thumbnailURLList", thumbnailURLList);
+                        bundle.putStringArrayList("imageURLList", imageURLList);
+                        intent.putExtras(bundle);
+                        startActivity(intent);
                     }
 
                     @Override
                     protected Object doInBackground(Object[] params) {
-                        String json = sender.executeGet(MainActivity.accountsActionURL + "?action=getPhotosId&Acc_ID=" + Acc_ID);
-                        ArrayList<String> urlList = new ArrayList<String>();
+                        String photosId = sender.executeGet(MainActivity.accountsActionURL + "?action=getPhotosId&Acc_ID=" + Acc_ID);
                         try{
-                            JSONObject jsonObject = new JSONObject(json);
+                            JSONObject jsonObject = new JSONObject(photosId);
                             JSONArray array = jsonObject.getJSONArray("combinePhotoId");
                             int length = array.length();
                             for(int i = 0; i < length; i++){
                                 String id = array.get(i).toString();
-                                urlList.add(MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + id);
+                                imageURLList.add(MainActivity.accountsActionURL + "?action=getPhotoById&Photo_ID=" + id);
+                                thumbnailURLList.add(MainActivity.accountsActionURL + "?action=getThumbnailPhotoById&Photo_ID=" + id);
                             }
                         }catch (JSONException e){
                             return null;
                         }
-                        return urlList;
+                        return true;
                     }
                 }.execute();
             }

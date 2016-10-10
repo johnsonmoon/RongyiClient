@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,18 +19,19 @@ import java.util.List;
 import xuyihao.JohnsonHttpConnector.connectors.http.Downloader;
 import xuyihao.rongyiclient.R;
 import xuyihao.rongyiclient.activities.MainActivity;
+import xuyihao.rongyiclient.tools.utils.BitmapUtils;
 
 /**
  * 显示图片的activity
  * <pre>
  *    设计思路：
- *    (1)通过传值获取图片的路径名(列表)，或者给出图片下载的URL并
- *    (2)获取图片(本地、下载)将图片文件转换成Bitmap列表
+ *    (1)通过传值获取图片的路径名(列表)，或者给出图片下载的URL并下载图片以及缩略图
+ *    (2)网络下载图片耗时，边加载边显示
  *    (3)逐张显示图片
  *    模式：
- *    (1)IMAGE_DISPLAY_MODE_DOWNLOAD 下载模式，需要给出图片下载地址列表[MODE(int), imageURLList(ArrayList<String>)]
- *    (2)IMAGE_DISPLAY_MODE_LOCALFILE 本地模式，需要给出图片路径名列表[MODE(int), imageFilePathNameList(ArrayList<String>)]
- *    (3)IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL 下载至本地存储，再显示模式[MODE(int), imageURLList(ArrayList<String>)]
+ *    (1)IMAGE_DISPLAY_MODE_DOWNLOAD 下载模式，需要给出图片(以及缩略图)下载地址列表[MODE(int), thumbnailURLList(ArrayList<String>), imageURLList(ArrayList<String>)]
+ *    (2)IMAGE_DISPLAY_MODE_LOCALFILE 本地模式，需要给出图片(以及缩略图)路径名列表[MODE(int), thumbnailFilePathNameList(ArrayList<String>), imageFilePathNameList(ArrayList<String>)]
+ *    (3)IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL 下载至本地存储，再显示模式[MODE(int), thumbnailURLList(ArrayList<String>), imageURLList(ArrayList<String>)]
  * </pre>
  *
  * Created by Xuyh at 2016-10-09 12:45.
@@ -44,15 +46,30 @@ public class ImageDisplayActivity extends AppCompatActivity {
     /**
      * 图片URL列表
      */
+    private List<String> thumbnailURLList = new ArrayList<>();
     private List<String> imageURLList = new ArrayList<>();
     /**
      * 图片文件路径名列表
      */
+    private List<String> thumbnailFilePathNameList = new ArrayList<>();
     private List<String> imageFilePathNameList = new ArrayList<>();
     /**
-     * 图片BitMap列表
+     * 缩略图BitMap列表
      */
+    private List<Bitmap> thumbnailBitMapList = new ArrayList<>();
     private List<Bitmap> imageBitMapList = new ArrayList<>();
+    /**
+     * 所有图片总数
+     */
+    private int imageTotalCount = 0;
+    /**
+     * 已经加载好的缩略图个数
+     */
+    private int thumbnailDownloadedCount = 0;
+    /**
+     * 已经加载好的原图图个数
+     */
+    private int imageDownloadedCount = 0;
     /**
      * 当前显示图片位置
      */
@@ -60,7 +77,6 @@ public class ImageDisplayActivity extends AppCompatActivity {
     /**
      * 控件
      */
-    private TextView textDisplayName;
     private TextView textPercent;
     private ImageView imageViewDisplay;
     private Button btnPreviousImage;
@@ -74,13 +90,12 @@ public class ImageDisplayActivity extends AppCompatActivity {
      */
     private Intent intent;
     private Bundle bundle;
+    private int MODE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_display);
-        this.intent = getIntent();
-        this.bundle = intent.getExtras();
         initView();
         initImages();
         initEvent();
@@ -90,102 +105,34 @@ public class ImageDisplayActivity extends AppCompatActivity {
      * 初始化图片列表
      */
     private void initImages(){
-        this.downloader = new Downloader(MainActivity.sender.getCookie());
-        new AsyncTask(){
-            int mode;
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mode = bundle.getInt("MODE");
-                if(mode == IMAGE_DISPLAY_MODE_DOWNLOAD){//下载模式
-                    textDisplayName.setText("正在下载图片...");
-                }else if (mode == IMAGE_DISPLAY_MODE_LOCALFILE){//本地模式
-                    textDisplayName.setText("正在解析本地图片...");
-                }else if (mode == IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL){//下载至本地模式
-                    textDisplayName.setText("正在下载图片...");
-                }
-            }
-
-            @Override
-            protected void onPostExecute(Object o) {
-                super.onPostExecute(o);
-                if(imageBitMapList.size() > 0){
-                    textDisplayName.setText("");
-                    textPercent.setText(1 + " / " + imageBitMapList.size());
-                    imageViewDisplay.setImageBitmap(imageBitMapList.get(0));
-                }
-            }
-
-            @Override
-            protected Object doInBackground(Object[] params) {
-                if(mode == IMAGE_DISPLAY_MODE_DOWNLOAD){//下载模式
-                    imageURLList = bundle.getStringArrayList("imageURLList");
-                    downloadFiles(imageURLList);
-                }else if (mode == IMAGE_DISPLAY_MODE_LOCALFILE){//本地模式
-                    imageFilePathNameList = bundle.getStringArrayList("imageFilePathNameList");
-                    initializeFiles(imageFilePathNameList);
-                }else if (mode == IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL){//下载至本地模式
-                    imageURLList = bundle.getStringArrayList("imageURLList");
-                    downloadFilesToLocal(imageURLList);
-                }
-                return null;
-            }
-        }.execute();
-    }
-
-    /**
-     * 下载图片至Bitmap列表方法
-     *
-     * AsyncTask调用
-     *
-     * @param urlList
-     */
-    private void downloadFiles(List<String> urlList){
-        for(String url : urlList){
-            byte[] imageByteArray = downloader.downloadByGet(url);
-            this.imageBitMapList.add(BitmapFactory.decodeByteArray(imageByteArray, 0, imageByteArray.length));
+        downloader = new Downloader(MainActivity.sender.getCookie());
+        intent = getIntent();
+        bundle = intent.getExtras();
+        MODE = bundle.getInt("MODE");
+        if(MODE == IMAGE_DISPLAY_MODE_DOWNLOAD){//下载模式
+            imageURLList = bundle.getStringArrayList("imageURLList");
+            thumbnailURLList = bundle.getStringArrayList("thumbnailURLList");
+            imageTotalCount = thumbnailURLList.size();
+            textPercent.setText(1 + " / " + thumbnailURLList.size());
+        }else if (MODE == IMAGE_DISPLAY_MODE_LOCALFILE){//本地模式
+            imageFilePathNameList = bundle.getStringArrayList("imageFilePathNameList");
+            thumbnailFilePathNameList = bundle.getStringArrayList("thumbnailFilePathNameList");
+            imageTotalCount = thumbnailFilePathNameList.size();
+            textPercent.setText(1 + " / " + thumbnailFilePathNameList.size());
+        }else if (MODE == IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL){//下载至本地模式
+            imageURLList = bundle.getStringArrayList("imageURLList");
+            thumbnailURLList = bundle.getStringArrayList("thumbnailURLList");
+            imageTotalCount = thumbnailURLList.size();
+            textPercent.setText(1 + " / " + thumbnailURLList.size());
         }
-    }
-
-    /**
-     * 下载图片至本地并初始化bitmap列表方法
-     *
-     * AsyncTask调用
-     *
-     * @param urlList
-     */
-    private void downloadFilesToLocal(List<String> urlList){
-        int i = 0;
-        for(String url : urlList){
-            i++;
-            String filePathName = MainActivity.BASE_TEMP_FILE_PATH + File.separator + "tempImage" + i +".jpg";
-            if(this.downloader.downloadByGet(filePathName, url)) {
-                this.imageBitMapList.add(BitmapFactory.decodeFile(filePathName));
-            }
-        }
-    }
-
-    /**
-     * 通过本地文件初始化BitMap列表
-     *
-     * AsyncTask调用(可能很耗时)
-     *
-     * @param filePathNameList
-     */
-    private void initializeFiles(List<String> filePathNameList){
-        for(String pathName : filePathNameList){
-            if(new File(pathName).exists()){
-                this.imageBitMapList.add(BitmapFactory.decodeFile(pathName));
-            }
-        }
+        imageViewDisplay.setImageResource(R.mipmap.image_loading_file);
+        new downloadImageAsyncTask().execute();
     }
 
     /**
      * 初始化控件
      */
     private void initView(){
-        this.textDisplayName = (TextView)findViewById(R.id.imageDispalyActivity_textView_displayName);
         this.textPercent = (TextView)findViewById(R.id.imageDispalyActivity_textView_percentOfImages);
         this.imageViewDisplay = (ImageView) findViewById(R.id.imageDisplayActivity_imageView_centerView);
         this.btnPreviousImage = (Button)findViewById(R.id.imageDisplayActivity_button_formerImage);
@@ -199,24 +146,149 @@ public class ImageDisplayActivity extends AppCompatActivity {
         this.btnPreviousImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(imageBitMapList.size() > 0){
-                    if(imageIndex > 0){
+                if(imageIndex > 0){
+                    if(imageDownloadedCount >= imageIndex){//有原图
                         imageIndex--;
+                        textPercent.setText((imageIndex+1) + " / " + thumbnailURLList.size());
                         imageViewDisplay.setImageBitmap(imageBitMapList.get(imageIndex));
+                    }else{
+                        imageIndex--;
+                        textPercent.setText((imageIndex+1) + " / " + thumbnailURLList.size());
+                        imageViewDisplay.setImageBitmap(thumbnailBitMapList.get(imageIndex));
                     }
                 }
             }
         });
+        /**
+         * 下一张，如果原图还未加载好，则显示缩略图
+         */
         this.btnNextImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(imageBitMapList.size() > 0){
-                    if(imageIndex < (imageBitMapList.size()-1)) {
+            if(imageIndex < imageTotalCount-1){
+                if(imageDownloadedCount-1 > imageIndex){//原图加载完成
+                    imageIndex++;
+                    textPercent.setText((imageIndex+1) + " / " + thumbnailURLList.size());
+                    imageViewDisplay.setImageBitmap(imageBitMapList.get(imageIndex));
+                }else{
+                    if(thumbnailDownloadedCount-1 > imageIndex){//缩略图加载完成
                         imageIndex++;
-                        imageViewDisplay.setImageBitmap(imageBitMapList.get(imageIndex));
+                        textPercent.setText((imageIndex+1) + " / " + thumbnailURLList.size());
+                        imageViewDisplay.setImageBitmap(thumbnailBitMapList.get(imageIndex));
+                    }else{//都没加载完成
+                        imageIndex++;
+                        textPercent.setText((imageIndex+1) + " / " + thumbnailURLList.size());
+                        imageViewDisplay.setImageResource(R.mipmap.image_loading_file);
                     }
                 }
             }
+            }
         });
+    }
+
+    /**
+     * 重写下载、加载文件的异步任务类
+     */
+    private class downloadImageAsyncTask extends AsyncTask{
+        private int totalCount;
+
+        public downloadImageAsyncTask() {
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if(MODE == IMAGE_DISPLAY_MODE_DOWNLOAD){//下载模式
+                totalCount = thumbnailURLList.size();
+                Toast.makeText(ImageDisplayActivity.this, "正在下载...", Toast.LENGTH_SHORT).show();
+            }else if (MODE == IMAGE_DISPLAY_MODE_LOCALFILE){//本地模式
+                totalCount = thumbnailFilePathNameList.size();
+                Toast.makeText(ImageDisplayActivity.this, "正在解析...", Toast.LENGTH_SHORT).show();
+            }else if (MODE == IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL){//下载至本地模式
+                totalCount = thumbnailURLList.size();
+                Toast.makeText(ImageDisplayActivity.this, "正在下载...", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            Toast.makeText(ImageDisplayActivity.this, "图片全部加载成功!", Toast.LENGTH_SHORT).show();
+        }
+
+        /**
+         * 下载完 n 张图片，更新一下状态
+         *
+         * <pre>
+         *     先加载缩略图，边加载变更新状态
+         *     后加载大图，边加载边更新状态
+         * </pre>
+         *
+         * @param params
+         * @return
+         */
+        @Override
+        protected Object doInBackground(Object[] params) {
+            if(MODE == IMAGE_DISPLAY_MODE_DOWNLOAD){//下载模式
+                //加载缩略图
+                for(int i = 0; i < totalCount; i++){
+                    BitmapUtils.downloadFiles(downloader, thumbnailURLList, thumbnailBitMapList, i, 1);
+                    publishProgress("thumbnail");
+                }
+                //加载原图
+                for(int i = 0; i < totalCount; i++){
+                    BitmapUtils.downloadFiles(downloader, imageURLList, imageBitMapList, i, 1);
+                    publishProgress("image");
+                }
+            }else if (MODE == IMAGE_DISPLAY_MODE_LOCALFILE){//本地模式
+                //加载缩略图
+                for(int i = 0; i < totalCount; i++){
+                    BitmapUtils.initializeFiles(thumbnailFilePathNameList, thumbnailBitMapList, i, 1);
+                    publishProgress("thumbnail");
+                }
+                //加载原图
+                for(int i = 0; i < totalCount; i++){
+                    BitmapUtils.initializeFiles(imageFilePathNameList, imageBitMapList, i, 1);
+                    publishProgress("image");
+                }
+            }else if (MODE == IMAGE_DISPLAY_MODE_DOWNLOAD_TO_LOCAL){//下载至本地模式
+                //加载缩略图
+                for(int i = 0; i < totalCount; i++){
+                    BitmapUtils.downloadFilesToLocal(downloader, thumbnailURLList, thumbnailBitMapList, i, 1);
+                    publishProgress("thumbnail");
+                }
+                //加载原图
+                for(int i = 0; i < totalCount; i++){
+                    BitmapUtils.downloadFilesToLocal(downloader, imageURLList, imageBitMapList, i, 1);
+                    publishProgress("image");
+                }
+            }
+            return null;
+        }
+
+        /**
+         * 更新状态
+         *
+         * @param values
+         */
+        @Override
+        protected void onProgressUpdate(Object[] values) {
+            super.onProgressUpdate(values);
+            String value = values[0].toString();
+            if(value.equals("thumbnail")){
+                thumbnailDownloadedCount++;
+            }else if(value.equals("image")){
+                imageDownloadedCount++;
+            }
+            if(imageIndex == 0 && imageDownloadedCount > 0){
+                imageViewDisplay.setImageBitmap(imageBitMapList.get(0));
+            }else if(imageIndex == 0 && thumbnailDownloadedCount > 0){
+                imageViewDisplay.setImageBitmap(thumbnailBitMapList.get(0));
+            } else if(imageDownloadedCount-1 == imageIndex){
+                imageViewDisplay.setImageBitmap(imageBitMapList.get(imageIndex));
+            } else if(thumbnailDownloadedCount-1 == imageIndex){
+                imageViewDisplay.setImageBitmap(thumbnailBitMapList.get(imageIndex));
+            }
+        }
     }
 }
